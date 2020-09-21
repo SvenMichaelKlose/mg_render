@@ -11,7 +11,7 @@ TEMPLATE_MATRIX(FLOAT,FLOAT)
 
 #define BUFFER_LEN 80
 
-static void getline(char *dest, int n, FILE *stream)
+static void our_getline(char *dest, int n, FILE *stream)
 {
   int c;
   int i;
@@ -53,7 +53,7 @@ static FILE *examine(const char *name, const char *extension, const char *header
   stream=fopen(file,"rb");
   free(file);
   if(NULL == stream) return(NULL);
-  getline(buffer,BUFFER_LEN,stream);
+  our_getline(buffer,BUFFER_LEN,stream);
   if(strcmp(header,/* not matching */buffer)) {fclose(stream); return(NULL);}
   return(stream);
 }                                                   
@@ -110,9 +110,9 @@ IMAGE *image_load(const char *name)
   else if(NULL != (stream=examine(name,".ppm","P6"))) type=RGB_IMG;
   else if(NULL != (stream=examine(name,".pfm","P7"))) type=FLOAT_IMG;
   if(NONE == type) return(NULL);
-  do getline(buffer,BUFFER_LEN,stream); while('#' == buffer[0]);
+  do our_getline(buffer,BUFFER_LEN,stream); while('#' == buffer[0]);
   if(2 != sscanf(buffer,"%u %u",&cols,&rows)) {fclose(stream); return(NULL);}
-  do getline(buffer,BUFFER_LEN,stream); while('#' == buffer[0]);
+  do our_getline(buffer,BUFFER_LEN,stream); while('#' == buffer[0]);
   if(NULL == (image=image_alloc(cols,rows,type))) {fclose(stream); return(NULL);}
   for(y=0; y<image->rows; y++)
     for(x=0; x<image->cols; x++)
