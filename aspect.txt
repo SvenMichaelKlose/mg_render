@@ -1,0 +1,1 @@
+Use the resize function of your favourite image processing tool to apply the correct pixel aspect ratio. ;)
