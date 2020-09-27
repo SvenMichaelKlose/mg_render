@@ -59,52 +59,57 @@ IMAGE *
 mg_render (unsigned char *raw)
 {
     IMAGE *dst;
-    if (NULL != (dst = image_alloc (X_SIZE, Y_SIZE, RGB_IMG))) {
-        RGB temp, palette[4];
-        int x1, x2, y1, y2;
-        unsigned char bitmap, colour;
-        boolean is_multi, is_inverse = (0 == (raw[-1] & 0x08));
 
-        palette[3] = vic_palette[(raw[-2] >> 4) & 0x0F];
-        for (y1 = 0; y1 < Y_SIZE / 16; y1++)
-            for (x1 = 0; x1 < X_SIZE / 8; x1++) {
-                colour =
-                    (raw + X_SIZE * Y_SIZE / 8)[((X_SIZE / 8) * y1 + x1) / 2];
-                palette[0] = vic_palette[(raw[-1] >> 4) & 0x0F];
-                if (0 == (x1 & 1)) {
-                    palette[1] = vic_palette[colour & 0x07];
-                    is_multi = (0 != (colour & 0x08));
-                } else {
-                    palette[1] = vic_palette[(colour >> 4) & 0x07];
-                    is_multi = (0 != ((colour >> 4) & 0x08));
-                }
-                palette[2] = vic_palette[raw[-1] & 0x07];
-                if (is_multi) {
-                    temp = palette[1];
-                    palette[1] = palette[2];
-                    palette[2] = temp;
-                } else if (is_inverse) {
-                    temp = palette[0];
-                    palette[0] = palette[1];
-                    palette[1] = temp;
-                }
-                for (y2 = 0; y2 < 16; y2++) {
-                    bitmap = raw[Y_SIZE * x1 + 16 * y1 + y2];
-                    if (!is_multi)
-                        for (x2 = 0; x2 < 8; x2 += 1)
-                            rgb_pixel (dst, 8 * x1 + x2, 16 * y1 + y2) =
-                                palette[(bitmap >> (7 - x2)) & 0x01];
-                    else
-                        for (x2 = 0; x2 < 8; x2 += 2) {
-                            int x = 8 * x1 + x2, y = 16 * y1 + y2;
-                            rgb_pixel (dst, x + 1, y) =
-                                rgb_pixel (dst, x, y) =
-                                palette[(bitmap >> (6 - x2)) & 0x03];
-                        }
-                }
+    if (!(dst = image_alloc (X_SIZE, Y_SIZE, RGB_IMG)))
+        return NULL;
+
+    RGB temp, palette[4];
+    int x1, x2, y1, y2;
+    unsigned char bitmap, colour;
+    boolean is_multi, is_inverse = (0 == (raw[-1] & 0x08));
+
+    palette[3] = vic_palette[(raw[-2] >> 4) & 0x0F];
+    for (y1 = 0; y1 < Y_SIZE / 16; y1++) {
+        for (x1 = 0; x1 < X_SIZE / 8; x1++) {
+            colour =
+                (raw + X_SIZE * Y_SIZE / 8)[((X_SIZE / 8) * y1 + x1) / 2];
+            palette[0] = vic_palette[(raw[-1] >> 4) & 0x0F];
+            if (0 == (x1 & 1)) {
+                palette[1] = vic_palette[colour & 0x07];
+                is_multi = (0 != (colour & 0x08));
+            } else {
+                palette[1] = vic_palette[(colour >> 4) & 0x07];
+                is_multi = (0 != ((colour >> 4) & 0x08));
             }
+            palette[2] = vic_palette[raw[-1] & 0x07];
+            if (is_multi) {
+                temp = palette[1];
+                palette[1] = palette[2];
+                palette[2] = temp;
+            } else if (is_inverse) {
+                temp = palette[0];
+                palette[0] = palette[1];
+                palette[1] = temp;
+            }
+            for (y2 = 0; y2 < 16; y2++) {
+                bitmap = raw[Y_SIZE * x1 + 16 * y1 + y2];
+                if (!is_multi)
+                    for (x2 = 0; x2 < 8; x2 += 1)
+                        rgb_pixel (dst, 8 * x1 + x2, 16 * y1 + y2) =
+                            palette[(bitmap >> (7 - x2)) & 0x01];
+                else
+                    for (x2 = 0; x2 < 8; x2 += 2) {
+                        int x = 8 * x1 + x2, y = 16 * y1 + y2;
+
+                        rgb_pixel (dst, x + 1, y) =
+                            rgb_pixel (dst, x, y) =
+                            palette[(bitmap >> (6 - x2)) & 0x03];
+                    }
+            }
+        }
     }
-    return (dst);
+
+    return dst;
 }
 
 int
@@ -121,7 +126,7 @@ main (int argc, char *argv[])
         exit (EXIT_FAILURE);
     }
 
-    if (NULL == (src = fopen (argv[1], "rb"))) {
+    if (!(src = fopen (argv[1], "rb"))) {
         fprintf (stderr,
                  "%s: Error: could not open file \'%s\' for read access.\n",
                  argv[0], argv[1]);
