@@ -1,4 +1,4 @@
-TARGET_EXEC ?= mg2ppm
+TARGET_EXEC ?= mg_render
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
